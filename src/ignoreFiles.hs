@@ -144,7 +144,6 @@ extensions = [
   ("Haskell.gitignore", ["hs"]),
   ("Idris.gitignore", ["idr"]),
   ("Java.gitignore", ["java"]),
-  ("JavaScript.gitignore", ["js"]),
   ("Julia.gitignore", ["julia"]),
   ("Kohana.gitignore", ["php"]),
   ("Leiningen.gitignore", ["clj", "cljs"]),
