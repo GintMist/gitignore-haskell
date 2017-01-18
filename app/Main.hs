@@ -9,7 +9,8 @@ main :: IO ()
 main = do
   arg <- getArgs
   if not $ null arg
-  then let argFile = fmap normalize arg
+  then let arg' = fmap normalize arg
+           argFile = (\p -> filter (=.= p) ignoreFiles) =<< arg'
        in if all (`elem` ignoreFiles) argFile
           then writeNewIgnoreFile argFile
           else putStrLn "Invalid argument"

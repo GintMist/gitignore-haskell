@@ -2,13 +2,14 @@ module Gitignore ( writeNewIgnoreFile
                  , guessFromParentFolder
                  , guessFromFileExtensions
                  , normalize
+                 , (=.=)
                  ) where
 
 import           Control.Lens         ((^.))
 import           Control.Monad        (when)
 import qualified Data.ByteString.Lazy as BL (ByteString, concat, writeFile)
-import           Data.Char            (toLower, toUpper)
-import           Data.List            (intersect)
+import           Data.Char            (toLower)
+import           Data.List            (intersect, nub)
 import           IgnoreFiles
 import           Network.Wreq         (get, responseBody)
 import           System.Directory     (doesFileExist, getCurrentDirectory,
@@ -28,7 +29,7 @@ getIgnoreFile = fmap (^. responseBody) . get . (baseURL ++)
 writeNewIgnoreFile :: [String] -> IO ()
 writeNewIgnoreFile nif = do
   backupOldGitignore
-  newFile <- sequenceA $ fmap getIgnoreFile nif
+  newFile <- sequenceA $ fmap getIgnoreFile (nub nif)
   BL.writeFile ".gitignore" (BL.concat newFile)
   putStrLn "New .gitignore file has been written"
 
@@ -36,10 +37,17 @@ getParentFolderName :: IO String
 getParentFolderName = fmap (takeBaseName . takeDirectory) getCurrentDirectory
 
 normalize :: String -> String
-normalize (c:cs) = (toUpper c : fmap toLower cs) <.> "gitignore"
+normalize = (<.> "gitignore")
+
+(=.=) :: String -> String -> Bool
+[] =.= [] = True
+[] =.= _  = False
+_ =.= []  = False
+(x:xs) =.= (y:ys) = (toLower x == toLower y) && (xs =.= ys)
 
 guessFromParentFolder :: IO [String]
-guessFromParentFolder = getParentFolderName >>= \p -> return $ filter (normalize p ==) ignoreFiles
+guessFromParentFolder = (normalize <$> getParentFolderName) >>=
+                        \p -> return $ filter (=.= p) ignoreFiles
 
 getAllFileExtensions :: IO [String]
 getAllFileExtensions = do
@@ -58,6 +66,6 @@ guessFromFileExtensions :: IO [String]
 guessFromFileExtensions = do
   allExt <- getAllFileExtensions
   return . concat $ fmap (\(ignore, exts) -> if null $ intersect exts allExt
-                                                         then []
-                                                         else [ignore])
-                                                         extensions
+                                             then []
+                                             else [ignore])
+                                             extensions
