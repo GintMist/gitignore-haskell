@@ -6,7 +6,7 @@ module Gitignore ( writeNewIgnoreFile
 
 import           Control.Lens         ((^.))
 import           Control.Monad        (when)
-import qualified Data.ByteString.Lazy as BL (ByteString (..), writeFile)
+import qualified Data.ByteString.Lazy as BL (ByteString (..), writeFile, concat)
 import           Data.Char            (toLower, toUpper)
 import           Data.List            (intersect)
 import           IgnoreFiles
@@ -26,11 +26,11 @@ getIgnoreFile = fmap (^. responseBody) . get . (baseURL ++)
   where
     baseURL = "https://raw.githubusercontent.com/github/gitignore/master/"
 
-writeNewIgnoreFile :: String -> IO ()
+writeNewIgnoreFile :: [String] -> IO ()
 writeNewIgnoreFile nif = do
   backupOldGitignore
-  newFile <- getIgnoreFile nif
-  BL.writeFile ".gitignore" newFile
+  newFile <- sequenceA $ fmap getIgnoreFile nif
+  BL.writeFile ".gitignore" (BL.concat newFile)
   putStrLn "New .gitignore file has been written"
 
 getParentFolderName :: IO String
