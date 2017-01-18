@@ -6,7 +6,7 @@ module Gitignore ( writeNewIgnoreFile
 
 import           Control.Lens         ((^.))
 import           Control.Monad        (when)
-import qualified Data.ByteString.Lazy as BL (ByteString (..), concat, writeFile)
+import qualified Data.ByteString.Lazy as BL (ByteString, concat, writeFile)
 import           Data.Char            (toLower, toUpper)
 import           Data.List            (intersect)
 import           IgnoreFiles
@@ -15,7 +15,6 @@ import           System.Directory     (doesFileExist, getCurrentDirectory,
                                        listDirectory, renameFile)
 import           System.FilePath      (takeBaseName, takeDirectory,
                                        takeExtension, (<.>))
-
 backupOldGitignore :: IO ()
 backupOldGitignore = do
   existence <- doesFileExist ".gitignore"
@@ -40,7 +39,7 @@ normalize :: String -> String
 normalize (c:cs) = (toUpper c : fmap toLower cs) <.> "gitignore"
 
 guessFromParentFolder :: IO [String]
-guessFromParentFolder = getParentFolderName >>= \p -> return $ filter ((normalize p) ==) ignoreFiles
+guessFromParentFolder = getParentFolderName >>= \p -> return $ filter (normalize p ==) ignoreFiles
 
 getAllFileExtensions :: IO [String]
 getAllFileExtensions = do
