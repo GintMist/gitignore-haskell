@@ -1,6 +1,5 @@
 module Main where
 
-import           Data.List          (nub)
 import           Gitignore
 import           IgnoreFiles
 import           Present

@@ -6,7 +6,7 @@ module Gitignore ( writeNewIgnoreFile
 
 import           Control.Lens         ((^.))
 import           Control.Monad        (when)
-import qualified Data.ByteString.Lazy as BL (ByteString (..), writeFile, concat)
+import qualified Data.ByteString.Lazy as BL (ByteString (..), concat, writeFile)
 import           Data.Char            (toLower, toUpper)
 import           Data.List            (intersect)
 import           IgnoreFiles
