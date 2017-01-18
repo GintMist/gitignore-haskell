@@ -1,4 +1,8 @@
-module Gitignore where
+module Gitignore ( writeNewIgnoreFile
+                 , guessFromParentFolder
+                 , guessFromFileExtensions
+                 , normalize
+                 ) where
 
 import           Control.Lens         ((^.))
 import           Control.Monad        (when)
