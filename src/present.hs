@@ -6,7 +6,7 @@ import           Text.Printf
 
 presentOptions :: [String] -> IO [String]
 presentOptions xs = do
-  putStrLn "Please choose one of the followings:\n"
+  putStrLn "Please choose from followings, you can choose more than one they will be merged:\n"
   pr opts 0
   a <- getLine
   if all (< length opts) (read <$> words a :: [Int])
@@ -14,6 +14,6 @@ presentOptions xs = do
   else return []
   where
     pr :: [String] -> Int -> IO ()
-    pr [] _ = putStrLn "\nPlease enter an index:"
+    pr [] _ = putStrLn "\nPlease enter index(es):"
     pr (o:os) n = (putStrLn $ printf "[%d] %s" n o) >> pr os (n + 1)
     opts = quicksort $ nub xs
