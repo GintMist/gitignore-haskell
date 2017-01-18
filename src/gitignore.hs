@@ -2,12 +2,15 @@ module Gitignore where
 
 import           Control.Lens         ((^.))
 import           Control.Monad        (when)
-import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Lazy as BL (ByteString (..), writeFile)
 import           Data.Char            (toLower, toUpper)
 import           Data.List            (intersect)
 import           IgnoreFiles
-import           Network.Wreq
-import           System.Directory
+import           Network.Wreq         (get, responseBody)
+import           System.Directory     (doesFileExist, getCurrentDirectory,
+                                       listDirectory, renameFile)
+import           System.FilePath      (takeBaseName, takeDirectory,
+                                       takeExtension, (<.>))
 
 backupOldGitignore :: IO ()
 backupOldGitignore = do
@@ -26,34 +29,20 @@ writeNewIgnoreFile nif = do
   BL.writeFile ".gitignore" newFile
   putStrLn "New .gitignore file has been written"
 
-
-getParentFolderName :: IO (Maybe String)
-getParentFolderName = fmap (toParent "" False) getCurrentDirectory
-  where
-    toParent _ _ [] = Nothing
-    toParent _ False directory = toParent "" (last directory == '\\') (init directory)
-    toParent p True directory = if last directory == '\\'
-                                then Just p
-                                else toParent (last directory : p) True (init directory)
+getParentFolderName :: IO String
+getParentFolderName = fmap (takeBaseName . takeDirectory) getCurrentDirectory
 
 normalize :: String -> String
-normalize (c:cs) = toUpper c : fmap toLower cs ++ ".gitignore"
+normalize (c:cs) = (toUpper c : fmap toLower cs) <.> "gitignore"
 
 guessFromParentFolder :: IO [String]
-guessFromParentFolder = do
-  parent <- getParentFolderName
-  case parent of
-    Nothing -> return []
-    Just n  -> if normalize n `elem` ignoreFiles
-               then return [normalize n]
-               else return []
-
+guessFromParentFolder = getParentFolderName >>= \p -> return $ filter ((normalize p) ==) ignoreFiles
 
 getAllFileExtensions :: IO [String]
 getAllFileExtensions = do
   currentDir <- getCurrentDirectory
   content <- listDirectory currentDir
-  (fmap . fmap) (getExtension "") (filterFilesWithExt content [])
+  (fmap . fmap) (tail . takeExtension) (filterFilesWithExt content [])
   where
     filterFilesWithExt [] acc = return acc
     filterFilesWithExt (c:cs) acc = do
@@ -61,9 +50,6 @@ getAllFileExtensions = do
       if existence && '.' `elem` c && c `notElem` acc
       then filterFilesWithExt cs (c : acc)
       else filterFilesWithExt cs acc
-    getExtension p filename
-      | last filename == '.' = p
-      | otherwise = getExtension (toLower (last filename) : p) (init filename)
 
 guessFromFileExtensions :: IO [String]
 guessFromFileExtensions = do
