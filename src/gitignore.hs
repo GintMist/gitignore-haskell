@@ -29,8 +29,8 @@ getIgnoreFile = fmap (^. responseBody) . get . (baseURL ++)
 
 writeNewIgnoreFile :: [String] -> IO ()
 writeNewIgnoreFile nif = do
-  backupOldGitignore
   newFile <- sequenceA $ fmap getIgnoreFile (nub nif)
+  backupOldGitignore
   BL.writeFile ".gitignore" (BL.concat newFile)
   putStrLn "New .gitignore file has been written"
 
