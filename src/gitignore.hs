@@ -5,8 +5,7 @@ module Gitignore ( writeNewIgnoreFile
                  ) where
 
 import           Control.Lens         ((^.))
-import           Control.Monad        (when)
-import           Control.Monad        (filterM, join)
+import           Control.Monad        (filterM, join, when)
 import qualified Data.ByteString.Lazy as BL (ByteString, concat, writeFile)
 import           Data.Char            (toLower)
 import           Data.List            (intersect, nub)
@@ -49,15 +48,17 @@ guessFromParentFolder = (normalize <$> getParentFolderName) >>=
                         \p -> return $ filter (=.= p) ignoreFiles
 
 getSubDirectories :: String -> IO [String]
-getSubDirectories path = join $ filterM (\x -> doesDirectoryExist (path </> x)) <$> (listDirectory path)
+getSubDirectories path = join $ filterM doesDirectoryExist
+                              . fmap (path </>)
+                              <$> listDirectory path
 
 getFiles :: String -> IO [String]
-getFiles path = join $ filterM (\x -> doesFileExist (path </> x)) <$> (listDirectory path)
+getFiles path = join $ filterM (doesFileExist . (path </>)) <$> listDirectory path
 
 getAllFileExtensions :: String -> IO [String]
 getAllFileExtensions path = do
   files <- getFiles path
-  subDirectories <- (fmap . fmap) (path </>) (getSubDirectories path)
+  subDirectories <- getSubDirectories path
   subExts <- sequenceA (fmap getAllFileExtensions subDirectories)
   return $ (tail <$> filter (not . null) (fmap takeExtension files)) ++ concat subExts
 
