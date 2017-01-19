@@ -35,8 +35,8 @@ writeNewIgnoreFile path nif = do
   BL.writeFile ".gitignore" (BL.concat newFile)
   putStrLn "New .gitignore file has been written"
 
-getParentFolderName :: String -> IO String
-getParentFolderName path = return $ (takeBaseName . takeDirectory) path
+getParentFolderName :: String -> String
+getParentFolderName = (takeBaseName . takeDirectory)
 
 normalize :: String -> String
 normalize = (<.> "gitignore")
@@ -44,9 +44,8 @@ normalize = (<.> "gitignore")
 (=.=) :: String -> String -> Bool
 a =.= b = (toLower <$> a) == (toLower <$> b)
 
-guessFromParentFolder :: String -> IO [String]
-guessFromParentFolder path = (normalize <$> getParentFolderName path) >>=
-                             \p -> return $ filter (=.= p) ignoreFiles
+guessFromParentFolder :: String -> [String]
+guessFromParentFolder path = filter (=.= (normalize $ getParentFolderName path)) ignoreFiles
 
 getSubDirectories :: String -> IO [String]
 getSubDirectories path = do
@@ -73,10 +72,8 @@ getFiles path =  do
       else go acc xs
 
 getAllEnvironmentGuesses :: String -> IO [String]
-getAllEnvironmentGuesses path = fmap nub
-                                $ (++)
+getAllEnvironmentGuesses path = (nub . (++ guessFromParentFolder path))
                                 <$> guessFromFileExtensions path
-                                <*> guessFromParentFolder path
 
 getAllFileExtensions :: String -> IO [String]
 getAllFileExtensions path = do
