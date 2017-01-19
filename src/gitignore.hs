@@ -1,8 +1,7 @@
 module Gitignore ( writeNewIgnoreFile
-                 , guessFromParentFolder
-                 , guessFromFileExtensions
                  , normalize
                  , (=.=)
+                 , getAllEnvironmentGuesses
                  ) where
 
 import           Control.Lens         ((^.))
@@ -72,6 +71,12 @@ getFiles path =  do
       if e
       then go (x : acc) xs
       else go acc xs
+
+getAllEnvironmentGuesses :: String -> IO [String]
+getAllEnvironmentGuesses path = fmap nub
+                                $ (++)
+                                <$> guessFromFileExtensions path
+                                <*> guessFromParentFolder path
 
 getAllFileExtensions :: String -> IO [String]
 getAllFileExtensions path = do

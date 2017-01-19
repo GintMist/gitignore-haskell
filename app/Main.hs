@@ -17,7 +17,7 @@ main = do
           then writeNewIgnoreFile cd argFile
           else putStrLn "Invalid argument"
   else do
-    allGuesses <- (++) <$> guessFromFileExtensions cd <*> guessFromParentFolder cd
+    allGuesses <- getAllEnvironmentGuesses cd
     if not $ null allGuesses
     then do
       opt <- presentOptions allGuesses

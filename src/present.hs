@@ -9,7 +9,7 @@ presentOptions xs = do
   pr opts 0
   a <- getLine
   if all (< length opts) (read <$> words a :: [Int])
-  then  return $ fmap (opts !!) (quicksort $ read <$> words a :: [Int])
+  then  return $ fmap (opts !!) (read <$> words a :: [Int])
   else return []
   where
     pr :: [String] -> Int -> IO ()
