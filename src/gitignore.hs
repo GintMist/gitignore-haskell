@@ -48,13 +48,13 @@ guessFromParentFolder = (normalize <$> getParentFolderName) >>=
                         \p -> return $ filter (=.= p) ignoreFiles
 
 getAllFileExtensions :: String -> IO [String]
-getAllFileExtensions path = listDirectory path >>= (flip go) []
+getAllFileExtensions path = listDirectory path >>= flip go []
   where
     go [] acc = return acc
     go (x:xs) acc = do
       e <- doesDirectoryExist (path </> x)
       if e
-      then getAllFileExtensions (path </> x) >>= (go xs) . (acc ++)
+      then getAllFileExtensions (path </> x) >>= go xs . (acc ++)
       else go xs (acc ++ filter (not . null) [takeExtension x])
 
 guessFromFileExtensions :: IO [String]
