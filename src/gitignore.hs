@@ -48,25 +48,23 @@ guessFromParentFolder = (normalize <$> getParentFolderName) >>=
                         \p -> return $ filter (=.= p) ignoreFiles
 
 getSubDirectories :: String -> IO [String]
-getSubDirectories path = join $ filterM doesDirectoryExist
-                              . fmap (path </>)
-                              <$> listDirectory path
+getSubDirectories path = listDirectory path >>= (filterM doesDirectoryExist . fmap (path </>))
 
 getFiles :: String -> IO [String]
-getFiles path = join $ filterM (doesFileExist . (path </>)) <$> listDirectory path
+getFiles path = listDirectory path >>= filterM (doesFileExist . (path </>))
+
+getAllFiles :: String -> IO [String]
+getAllFiles path = (++) <$> (getFiles path)
+                        <*> ((getSubDirectories path)
+                        >>= ((fmap concat) . (traverse getAllFiles)))
 
 getAllFileExtensions :: String -> IO [String]
-getAllFileExtensions path = do
-  files <- getFiles path
-  subDirectories <- getSubDirectories path
-  subExts <- sequenceA (fmap getAllFileExtensions subDirectories)
-  return $ (tail <$> filter (not . null) (fmap takeExtension files)) ++ concat subExts
-
+getAllFileExtensions = (fmap (filter (not . null) . (fmap takeExtension))) . getAllFiles
 
 guessFromFileExtensions :: IO [String]
 guessFromFileExtensions = do
   path <- getCurrentDirectory
-  allExt <- getAllFileExtensions path
+  allExt <- (fmap.fmap) tail (getAllFileExtensions path)
   return . concat $ fmap (\(ignore, exts) -> if null $ intersect exts allExt
                                              then []
                                              else [ignore])
